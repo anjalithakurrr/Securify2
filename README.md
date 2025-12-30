@@ -2,6 +2,11 @@
 
 A robust identity verification system leveraging Cloudflare Workers, D1 Database, R2 Storage, and face-api.js for real-time face recognition.
 
+## 👥 Team
+ Bob_the_builder
+ Navya Aggarwal — Team Lead
+ Anjali Thakur
+
 ## 🚀 Live Demo
 The application is deployed on Cloudflare Pages.
 
