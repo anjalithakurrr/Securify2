@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Securify - Identity Verification</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+</head>
+
+<body>
+    <div class="logo">Securify</div>
+
+    <div class="container">
+        <!-- Welcome Screen -->
+        <div class="screen active" id="welcomeScreen">
+            <div class="glass-card">
+                <h1 class="greeting-text">Welcome to Securify</h1>
+                <p class="subtext">Secure Identity Verification System</p>
+                <div class="action-buttons">
+                    <button class="glow-button" onclick="goToVerification()">
+                        <span>Verify Identity</span>
+                    </button>
+                    <button class="secondary-button" onclick="goToAdminAuth()">
+                        <span>🔐 Manage Database</span>
+                    </button>
+                    <button class="secondary-button dashboard-btn" onclick="goToDashboard()">
+                        <span>📊 View Dashboard</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Auth Screen -->
+        <div class="screen" id="adminAuthScreen">
+            <div class="glass-card">
+                <h2 class="screen-title">🔐 Admin Authentication</h2>
+                <div class="status-badge warning">Restricted Access</div>
+                <p class="subtext">Only authorized administrators can manage the database</p>
+
+                <div class="input-group">
+                    <label class="input-label">Admin Aadhar Number</label>
+                    <input type="tel" class="glass-input" id="adminAuthAadhar" placeholder="Enter your 12-digit Aadhar"
+                        maxlength="12">
+                </div>
+
+                <button class="glow-button" onclick="startAdminVerification()">
+                    <span>Verify & Continue</span>
+                </button>
+                <button class="back-button" onclick="goBack('adminAuthScreen', 'welcomeScreen')">
+                    <span>Back</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Admin Face Verification Screen -->
+        <div class="screen" id="adminFaceScreen">
+            <div class="glass-card">
+                <h2 class="screen-title">Admin Face Verification</h2>
+                <div class="status-badge warning">Security Check</div>
+                <p class="instruction-text">Position your face in the frame to authenticate</p>
+
+                <div class="main-content">
+                    <div class="upload-container">
+                        <h3>Your Photo</h3>
+                        <div id="adminReferenceContainer">
+                            <img id="adminReferenceImage" src="" alt="Admin reference">
+                        </div>
+                    </div>
+
+                    <div class="video-container">
+                        <h3>Live Webcam</h3>
+                        <div id="admin-video-wrapper">
+                            <video id="adminVideo" autoplay muted playsinline></video>
+                        </div>
+                        <button class="glow-button" id="adminStartWebcamBtn" disabled>
+                            <span>Start Webcam</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="adminStatus">Loading...</div>
+
+                <button class="back-button" onclick="cancelAdminAuth()">
+                    <span>Cancel</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Verification Input Screen -->
+        <div class="screen" id="inputScreen">
+            <div class="glass-card">
+                <h2 class="screen-title">Enter Your Details</h2>
+                <div class="status-badge">Step 1 of 2</div>
+
+                <div class="input-group">
+                    <label class="input-label">Aadhar Number or Phone Number</label>
+                    <input type="tel" class="glass-input" id="identityInput"
+                        placeholder="Enter Aadhar (12 digits) or Phone (10 digits)">
+                </div>
+
+                <button class="glow-button" onclick="submitIdentity()">
+                    <span>Continue</span>
+                </button>
+                <button class="back-button" onclick="goBack('inputScreen', 'welcomeScreen')">
+                    <span>Back</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Face Verification Screen -->
+        <div class="screen" id="faceScreen">
+            <div class="glass-card">
+                <h2 class="screen-title">Face Verification</h2>
+                <div class="status-badge">Step 2 of 2</div>
+                <p class="instruction-text">Position your face in the frame</p>
+
+                <div class="main-content">
+                    <div class="upload-container">
+                        <h3>Reference Image</h3>
+                        <div id="referenceImageContainer">
+                            <img id="referenceImage" src="" alt="Reference image preview">
+                        </div>
+                    </div>
+
+                    <div class="video-container">
+                        <h3>Live Webcam</h3>
+                        <div id="video-wrapper">
+                            <video id="video" autoplay muted playsinline></video>
+                        </div>
+                        <button class="glow-button" id="startWebcamButton" disabled>
+                            <span>Start Webcam</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="status">Loading face recognition models...</div>
+
+                <div class="verification-progress" id="verificationProgress" style="display: none;">
+                    <div class="progress-container">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <div class="progress-dots">
+                            <span class="dot" id="dot1"></span>
+                            <span class="dot" id="dot2"></span>
+                            <span class="dot" id="dot3"></span>
+                            <span class="dot" id="dot4"></span>
+                            <span class="dot" id="dot5"></span>
+                        </div>
+                    </div>
+                    <div class="progress-text" id="progressText">Verifying...</div>
+                </div>
+
+                <div class="timeout-progress" id="timeoutProgress" style="display: none;">
+                    <div class="timeout-bar">
+                        <div class="timeout-fill" id="timeoutFill"></div>
+                    </div>
+                    <div class="timeout-text" id="timeoutText">Time remaining: 6s</div>
+                </div>
+
+                <div class="button-group">
+                    <button class="back-button" onclick="goBack('faceScreen', 'inputScreen')">
+                        <span>Back</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Screen -->
+        <div class="screen" id="successScreen">
+            <div class="glass-card">
+                <div class="success-icon">✓</div>
+                <h2 class="screen-title">Verification Successful!</h2>
+                <p class="subtext" id="verifiedUser">You have been verified</p>
+                <button class="glow-button" onclick="goToVerification()">
+                    <span>Verify Another Identity</span>
+                </button>
+                <button class="back-button" onclick="goBack('successScreen', 'welcomeScreen')">
+                    <span>Back to Home</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Admin Screen -->
+        <div class="screen" id="adminScreen">
+            <div class="glass-card admin-card">
+                <h2 class="screen-title">Manage Database</h2>
+
+                <!-- Tab Navigation -->
+                <div class="admin-tabs">
+                    <button class="tab-btn active" onclick="switchAdminTab('add')">
+                        <span>➕ Add User</span>
+                    </button>
+                    <button class="tab-btn" onclick="switchAdminTab('view')">
+                        <span>👥 View Users</span>
+                    </button>
+                </div>
+
+                <!-- Add User Tab -->
+                <div class="admin-tab-content active" id="addUserTab">
+                    <p class="subtext">Add a new person to the verification database</p>
+
+                    <div class="input-group">
+                        <label class="input-label">Name</label>
+                        <input type="text" class="glass-input" id="adminName" placeholder="Full Name">
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label">Aadhar Number</label>
+                        <div class="input-with-action">
+                            <input type="tel" class="glass-input" id="adminAadhar" placeholder="12-digit Aadhar Number"
+                                maxlength="12">
+                            <button class="scan-btn" onclick="openAadharScanner()" title="Scan Aadhar Card">
+                                📷 Scan
+                            </button>
+                        </div>
+                        <div id="scanStatus" class="scan-status"></div>
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label">Phone Number <span class="optional-tag">(optional)</span></label>
+                        <input type="tel" class="glass-input" id="adminPhone" placeholder="10-digit Phone Number"
+                            maxlength="10">
+                    </div>
+
+                    <div class="input-group">
+                        <label class="input-label">Face Photo</label>
+                        <div class="photo-options">
+                            <label class="photo-option">
+                                <input type="radio" name="photoSource" value="upload" checked
+                                    onchange="togglePhotoSource('upload')">
+                                <span>📁 Upload</span>
+                            </label>
+                            <label class="photo-option">
+                                <input type="radio" name="photoSource" value="webcam"
+                                    onchange="togglePhotoSource('webcam')">
+                                <span>📸 Webcam</span>
+                            </label>
+                        </div>
+
+                        <div id="uploadPhotoSection">
+                            <input type="file" class="glass-input" id="adminPhoto" accept="image/*">
+                        </div>
+
+                        <div id="webcamPhotoSection" style="display: none;">
+                            <div id="addUserWebcamWrapper">
+                                <video id="addUserVideo" autoplay muted playsinline></video>
+                            </div>
+                            <button class="secondary-button capture-btn" onclick="captureWebcamPhoto()">
+                                <span>📸 Capture Photo</span>
+                            </button>
+                        </div>
+
+                        <div id="photoPreview" class="photo-preview"></div>
+                    </div>
+
+                    <button class="glow-button" onclick="addUser()">
+                        <span>Add to Database</span>
+                    </button>
+                </div>
+
+                <!-- Aadhar Scanner Modal -->
+                <div id="aadharScannerModal" class="scanner-modal" style="display: none;">
+                    <div class="scanner-content">
+                        <h3>📷 Scan Aadhar Card</h3>
+                        <p class="subtext">Upload or capture an image of the Aadhar card</p>
+
+                        <div class="photo-options">
+                            <label class="photo-option">
+                                <input type="radio" name="aadharPhotoSource" value="upload" checked
+                                    onchange="toggleAadharPhotoSource('upload')">
+                                <span>📁 Upload File</span>
+                            </label>
+                            <label class="photo-option">
+                                <input type="radio" name="aadharPhotoSource" value="webcam"
+                                    onchange="toggleAadharPhotoSource('webcam')">
+                                <span>📸 Capture Photo</span>
+                            </label>
+                        </div>
+
+                        <div id="uploadAadharSection">
+                            <input type="file" id="aadharCardInput" accept="image/*"
+                                onchange="handleAadharImageSelect(this)">
+                            <button class="extract-btn" onclick="proceedAadharExtraction()">
+                                <span>Proceed to Extract Info</span>
+                            </button>
+                        </div>
+
+                        <div id="webcamAadharSection" style="display: none;">
+                            <div class="aadhar-webcam-container">
+                                <div class="webcam-preview-frame">
+                                    <video id="aadharVideo" autoplay muted playsinline></video>
+                                    <div class="webcam-corner-tl"></div>
+                                    <div class="webcam-corner-tr"></div>
+                                    <div class="webcam-corner-bl"></div>
+                                    <div class="webcam-corner-br"></div>
+                                </div>
+                                <button class="capture-button" onclick="captureAadharWebcamPhoto()">
+                                    <span>📸 Capture Photo</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="scanPreview" class="scan-preview"></div>
+                        <div id="scanningIndicator" class="scanning-indicator" style="display: none;">
+                            <div class="spinner"></div>
+                            <span>Extracting details...</span>
+                        </div>
+
+                        <button class="back-button" onclick="closeAadharScanner()">
+                            <span>Cancel</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- View Users Tab -->
+                <div class="admin-tab-content" id="viewUsersTab">
+                    <div class="users-header">
+                        <p class="subtext">All registered users</p>
+                        <button class="refresh-btn" onclick="loadUsersList()">🔄 Refresh</button>
+                    </div>
+
+                    <div class="users-list-container">
+                        <div id="usersListContent">
+                            <p class="loading-text">Loading users...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="back-button" onclick="goBack('adminScreen', 'welcomeScreen')">
+                    <span>Back</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Dashboard Screen -->
+        <div class="screen" id="dashboardScreen">
+            <div class="glass-card dashboard-card">
+                <div class="dashboard-header">
+                    <div class="dashboard-title-section">
+                        <h2 class="screen-title">📊 Analytics Dashboard</h2>
+                        <p class="subtext">Real-time verification insights</p>
+                    </div>
+                    <button class="refresh-btn" onclick="populateDashboard()">🔄 Refresh</button>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card total">
+                        <div class="stat-header">
+                            <div class="stat-icon-wrapper total">
+                                <span class="stat-icon">📋</span>
+                            </div>
+                            <div class="stat-trend" id="successRate">--</div>
+                        </div>
+                        <div class="stat-value" id="totalVerifications">0</div>
+                        <div class="stat-label">Total Verifications</div>
+                    </div>
+                    <div class="stat-card success">
+                        <div class="stat-header">
+                            <div class="stat-icon-wrapper success">
+                                <span class="stat-icon">✓</span>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="successCount">0</div>
+                        <div class="stat-label">Successful</div>
+                        <div class="stat-bar success"></div>
+                    </div>
+                    <div class="stat-card failed">
+                        <div class="stat-header">
+                            <div class="stat-icon-wrapper failed">
+                                <span class="stat-icon">✗</span>
+                            </div>
+                        </div>
+                        <div class="stat-value" id="failedCount">0</div>
+                        <div class="stat-label">Failed</div>
+                        <div class="stat-bar failed"></div>
+                    </div>
+                </div>
+
+                <!-- Dashboard Filters -->
+                <div class="dashboard-filters">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="historySearch" placeholder="Search by name or Aadhar..."
+                            oninput="filterDashboard()">
+                    </div>
+                    <div class="filter-group">
+                        <select id="statusFilter" class="glass-select" onchange="filterDashboard()">
+                            <option value="all">All Status</option>
+                            <option value="success">Success</option>
+                            <option value="failed">Failed</option>
+                        </select>
+                        <select id="timeFilter" class="glass-select" onchange="filterDashboard()">
+                            <option value="all">All Time</option>
+                            <option value="today">Today</option>
+                            <option value="week">This Week</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- History Section -->
+                <div class="history-section">
+                    <div class="section-header">
+                        <h3 class="section-title">📜 Recent Activity</h3>
+                        <div class="section-actions">
+                            <span class="history-count" id="historyCount">0 records</span>
+                        </div>
+                    </div>
+
+                    <div class="history-list" id="historyTableBody">
+                        <div class="empty-state">
+                            <div class="empty-icon">📭</div>
+                            <p>No verification history yet</p>
+                            <span class="empty-hint">Verifications will appear here</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dashboard-actions">
+                    <button class="danger-button" onclick="clearLoginHistory()">
+                        <span>🗑️ Clear All</span>
+                    </button>
+                    <button class="back-button" onclick="goBack('dashboardScreen', 'welcomeScreen')">
+                        <span>← Back to Home</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
