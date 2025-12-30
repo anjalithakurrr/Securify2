@@ -5,6 +5,7 @@ A robust identity verification system leveraging Cloudflare Workers, D1 Database
 ## 👥 Team
  Bob_the_builder
  Navya Aggarwal — Team Lead
+ 
  Anjali Thakur
 
 ## 🚀 Live Demo
